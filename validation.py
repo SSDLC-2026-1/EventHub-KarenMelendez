@@ -70,7 +70,7 @@ def luhn_is_valid(number: str) -> bool:
 def validate_card_number(card_number: str) -> Tuple[str, str]:
     
 
-    card_number = card_number.strip()
+    card_number = card_number.strip().replace(" ", "").replace("-", "")
     error_message = " "
     if not 19 >= len(card_number) >= 13:
         error_message = "Length between 13 and 19 digits"
@@ -87,25 +87,23 @@ def validate_card_number(card_number: str) -> Tuple[str, str]:
 def validate_exp_date(exp_date: str) -> Tuple[str, str]:
 
     exp_date = exp_date.strip()
-    error_message = ""
 
-    # Debe tener exactamente 4 dígitos
-    if len(exp_date) != 4 or not exp_date.isdigit():
+    # Debe ser exactamente 4 números
+    if not exp_date.isdigit() or len(exp_date) != 4:
         return "", "Invalid Card ID"
 
     month = int(exp_date[:2])
-    year = int(exp_date[2:]) + 2000  # convierte 28 → 2028
+    year = 2000 + int(exp_date[2:])  # 28 -> 2028
 
-    if not 1 <= month <= 12:
+    if month < 1 or month > 12:
         return "", "Invalid Card ID"
 
-    current_year = datetime.now().year
-    current_month = datetime.now().month
-
-    if year < current_year or (year == current_year and month < current_month):
+    now = datetime.now()
+    
+    if year < now.year or (year == now.year and month < now.month):
         return "", "Expired Card"
 
-    return exp_date, error_message
+    return exp_date, ""
 
 
 def validate_cvv(cvv: str) -> Tuple[str, str]:
