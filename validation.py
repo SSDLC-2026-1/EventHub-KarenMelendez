@@ -120,10 +120,8 @@ def validate_billing_email(billing_email: str) -> Tuple[str, str]:
 
     normalized_email=billing_email.strip().lower()
     
-    if billing_email.len()<254:
-        return normalized_email
-    else: 
-        return "Max length 254"
+    if len(billing_email) > 254:
+        return "", "Max length 254"
     
     if normalized_email.count("@") != 1:
        return "", "Invalid email format"
