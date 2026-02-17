@@ -96,7 +96,7 @@ def validate_exp_date(exp_date: str) -> Tuple[str, str]:
 
         if not exp_date.startswith("%Y") < "41" and "12">=exp_date.startswith("%m") >= "0":
             error_message = "Invalid Card ID"
-        elif exp_date.startswith("%m/%Y") > date_currenty.now().strftime("%m/%Y"):
+        elif exp_date.startswith("%m/%Y") > datetime.now().strftime("%m/%Y"):
             error_message = "Invalid Card"
         else:
             return exp_date , error_message
