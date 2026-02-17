@@ -130,43 +130,56 @@ def validate_cvv(cvv: str) -> Tuple[str, str]:
 
 
 def validate_billing_email(billing_email: str) -> Tuple[str, str]:
-    """
-    Validate billing email.
 
-    Requirements:
-    - Normalize (strip + lowercase)
-    - Max length 254
-    - Must match basic email pattern
+    normalized_email=billing_email.strip().lower()
+    
+    if billing_email.len()<254:
+        return normalized_email
+    else: 
+        return "Max length 254"
+    
+    if normalized_email.count("@") != 1:
+       return "", "Invalid email format"
 
-    Input:
-        billing_email (str)
+    local_part, domain = normalized_email.split("@")
 
-    Returns:
-        (normalized_email, error_message)
-    """
-    # TODO: Implement validation
-    return "", ""
+    if not local_part or not domain:
+       return "", "Invalid email format"
+
+    if "." not in domain:
+       return "", "Invalid email format"
+
+    if domain.startswith(".") or domain.endswith("."):
+       return "", "Invalid email format"
+
+    if " " in normalized_email:
+       return "", "Invalid email format"
+
+    return normalized_email, ""
+
 
 
 def validate_name_on_card(name_on_card: str) -> Tuple[str, str]:
-    """
-    Validate name on card.
+    if not isinstance(name_on_card, str):
+        return "", "Name must be a string"
 
-    Requirements:
-    - Normalize input
-    - Collapse multiple spaces
-    - Length between 2 and 60 characters
-    - Only letters (including accents), spaces, apostrophes, hyphens
+    normalized = name_on_card.strip()
+    normalized = " ".join(normalized.split())
 
-    Input:
-        name_on_card (str)
+ 
+    if len(normalized) < 2 or len(normalized) > 60:
+        return "", "Name must be between 2 and 60 characters"
 
-    Returns:
-        (normalized_name, error_message)
-    """
-    # TODO: Implement validation
-    return "", ""
+    for char in normalized:
+        if not (
+            char.isalpha()
+            or char == " "
+            or char == "-"
+            or char == "'"
+        ):
+            return "", "Name contains invalid characters"
 
+    return normalized, ""
 
 # =============================
 # Orchestrator Function
