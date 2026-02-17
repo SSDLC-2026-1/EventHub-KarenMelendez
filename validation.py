@@ -74,7 +74,7 @@ def validate_card_number(card_number: str) -> Tuple[str, str]:
     error_message = " "
     if not 19 >= len(card_number) >= 13:
         error_message = "Length between 13 and 19 digits"
-    elif card_number.isdigit():
+    elif not card_number.isdigit():
         error_message = "Card number must be digits"
     elif not luhn_is_valid(card_number):   
         error_message = "Invalid card number"
@@ -85,21 +85,25 @@ def validate_card_number(card_number: str) -> Tuple[str, str]:
 
 
 def validate_exp_date(exp_date: str) -> Tuple[str, str]:
+
     exp_date = exp_date.strip()
     error_message = ""
 
-    if len(exp_date) != 7 or exp_date[2] != "/":
-        error_message = "Invalid Card ID"
-    else:
-        month = exp_date[:2]
-        year = exp_date[3:]
+    # Debe tener exactamente 4 dígitos
+    if len(exp_date) != 4 or not exp_date.isdigit():
+        return "", "Invalid Card ID"
 
-        if not exp_date.startswith("%Y") < "41" and "12">=exp_date.startswith("%m") >= "0":
-            error_message = "Invalid Card ID"
-        elif exp_date.startswith("%m/%Y") > datetime.now().strftime("%m/%Y"):
-            error_message = "Invalid Card"
-        else:
-            return exp_date , error_message
+    month = int(exp_date[:2])
+    year = int(exp_date[2:]) + 2000  # convierte 28 → 2028
+
+    if not 1 <= month <= 12:
+        return "", "Invalid Card ID"
+
+    current_year = datetime.now().year
+    current_month = datetime.now().month
+
+    if year < current_year or (year == current_year and month < current_month):
+        return "", "Expired Card"
 
     return exp_date, error_message
 
