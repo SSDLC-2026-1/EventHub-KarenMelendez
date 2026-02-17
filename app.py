@@ -8,7 +8,7 @@ from flask import Flask, render_template, request, abort, url_for, redirect
 from pathlib import Path
 import json
 
-from validation_Sara import validate_payment_form
+from validation import validate_payment_form
 
 app = Flask(__name__)
 app.config["TEMPLATES_AUTO_RELOAD"] = True
