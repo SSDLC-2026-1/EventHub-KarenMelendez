@@ -42,22 +42,25 @@ def normalize_basic(value: str) -> str:
     """
     return unicodedata.normalize("NFKC", (value or "")).strip()
 
-
 def luhn_is_valid(number: str) -> bool:
-    """
-    ****BONUS IMPLEMENTATION****
+    if not number.isdigit():
+        return False
 
-    Validate credit card number using Luhn algorithm.
+    total = 0
+    reverse_digits = number[::-1]
 
-    Input:
-        number (str) -> digits only
+    for i in range(len(reverse_digits)):
+        digit = int(reverse_digits[i])
 
-    Returns:
-        True if valid according to Luhn algorithm
-        False otherwise
-    """
-    # TODO: Implement Luhn algorithm
-    pass
+        # Duplicar cada segundo dígito
+        if i % 2 == 1:
+            digit *= 2
+            if digit > 9:
+                digit -= 9
+
+        total += digit
+
+    return total % 10 == 0
 
 
 # =============================
@@ -65,68 +68,52 @@ def luhn_is_valid(number: str) -> bool:
 # =============================
 
 def validate_card_number(card_number: str) -> Tuple[str, str]:
-    """
-    Validate credit card number.
+    
 
-    Requirements:
-    - Normalize input
-    - Remove spaces and hyphens before validation
-    - Must contain digits only
-    - Length between 13 and 19 digits
-    - BONUS: Must pass Luhn algorithm
-
-    Input:
-        card_number (str)
-
-    Returns:
-        (card, error_message)
-
-    Notes:
-        - If invalid → return ("", "Error message")
-        - If valid → return (all credit card digits, "")
-    """
-    # TODO: Implement validation
-    return "", ""
+    card_number = card_number.strip()
+    error_message = " "
+    if not 19 >= len(card_number) >= 13:
+        error_message = "Length between 13 and 19 digits"
+    elif card_number.isdigit():
+        error_message = "Card number must be digits"
+    elif not luhn_is_valid(card_number):   
+        error_message = "Invalid card number"
+    else:
+        return card_number, error_message
+    
+    return "",error_message
 
 
 def validate_exp_date(exp_date: str) -> Tuple[str, str]:
-    """
-    Validate expiration date.
+    exp_date = exp_date.strip()
+    error_message = ""
 
-    Requirements:
-    - Format must be MM/YY
-    - Month must be between 01 and 12
-    - Must not be expired compared to current UTC date
-    - Optional: limit to reasonable future (e.g., +15 years)
+    if len(exp_date) != 7 or exp_date[2] != "/":
+        error_message = "Invalid Card ID"
+    else:
+        month = exp_date[:2]
+        year = exp_date[3:]
 
-    Input:
-        exp_date (str)
+        if not exp_date.startswith("%Y") < "41" and "12">=exp_date.startswith("%m") >= "0":
+            error_message = "Invalid Card ID"
+        elif exp_date.startswith("%m/%Y") > date_currenty.now().strftime("%m/%Y"):
+            error_message = "Invalid Card"
+        else:
+            return exp_date , error_message
 
-    Returns:
-        (normalized_exp_date, error_message)
-    """
-    # TODO: Implement validation
-    return "", ""
+    return exp_date, error_message
 
 
 def validate_cvv(cvv: str) -> Tuple[str, str]:
-    """
-    Validate CVV.
+    
+    error_message = " "
+    cvv = cvv.strip()
+    if 4 >=  len(cvv) >= 3 and cvv.isdigit():
+        return cvv,error_message
+    else:
+        error_message = "Invalid CVV"
 
-    Requirements:
-    - Must contain only digits
-    - Must be exactly 3 or 4 digits
-    - Should NOT return the CVV value for storage
-
-    Input:
-        cvv (str)
-
-    Returns:
-        ("", error_message)
-        (always return empty clean value for security reasons)
-    """
-    # TODO: Implement validation
-    return "", ""
+    return " ", error_message
 
 
 def validate_billing_email(billing_email: str) -> Tuple[str, str]:
