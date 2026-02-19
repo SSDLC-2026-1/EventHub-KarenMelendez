@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional, Dict
 
-from flask import Flask, render_template, request, abort, url_for, redirect
+from flask import Flask, render_template, request, abort, url_for, redirect, session
 from pathlib import Path
 import json
 
@@ -12,6 +12,7 @@ from validation import validate_payment_form
 
 app = Flask(__name__)
 app.config["TEMPLATES_AUTO_RELOAD"] = True
+app.secret_key = "dev-secret-change-me"
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -35,6 +36,20 @@ class Event:
     available_tickets: int
     banner_url: str
     description: str
+
+def _user_with_defaults(u: dict) -> dict:
+    u = dict(u)
+    u.setdefault("role", "user")      
+    u.setdefault("status", "active")  
+    u.setdefault("locked_until", "") 
+    return u
+
+def get_current_user() -> Optional[dict]:
+    email = session.get("user_email")
+    if not email:
+        return None
+    return find_user_by_email(email)
+
 
 
 def load_events() -> List[Event]:
@@ -249,9 +264,11 @@ def login():
         return render_template(
             "login.html",
             error="Invalid credentials.",
-            field_errors={"email": " ", "password": " "},  
+            field_errors={"email": " ", "password": " "},
             form={"email": email},
         ), 401
+
+    session["user_email"] = (user.get("email") or "").strip().lower()
 
     return redirect(url_for("dashboard"))
 
@@ -281,7 +298,8 @@ def register():
         "email": email,
         "phone": phone,
         "password": password,
-        "confirm_password": confirm_password
+        "role": "user",          
+        "status": "active",
     })
 
     save_users(users)
@@ -290,8 +308,11 @@ def register():
 
 @app.get("/dashboard")
 def dashboard():
+
+
     paid = request.args.get("paid") == "1"
-    return render_template("dashboard.html", user_name="USUARIO",paid=paid)
+    user = get_current_user()
+    return render_template("dashboard.html", user_name=(user.get("full_name") if user else "User"), paid=paid)
 
 @app.route("/checkout/<int:event_id>", methods=["GET", "POST"])
 def checkout(event_id: int):
@@ -371,6 +392,117 @@ def checkout(event_id: int):
     return redirect(url_for("dashboard", paid="1"))
 
 
+
+@app.route("/profile", methods=["GET", "POST"])
+def profile():
+ 
+
+    user = get_current_user()
+    if not user:
+        session.clear()
+        return redirect(url_for("login"))
+
+    form = {
+        "full_name": user.get("full_name", ""),
+        "email": user.get("email", ""),
+        "phone": user.get("phone", ""),
+    }
+
+    field_errors = {}  
+    success_msg = None
+
+    if request.method == "POST":
+        full_name = request.form.get("full_name", "")
+        phone = request.form.get("phone", "")
+
+        current_password = request.form.get("current_password", "")
+        new_password = request.form.get("new_password", "")
+        confirm_new_password = request.form.get("confirm_new_password", "")
+
+        users = load_users()
+        email_norm = (user.get("email") or "").strip().lower()
+
+        for u in users:
+            if (u.get("email") or "").strip().lower() == email_norm:
+                u["full_name"] = full_name
+                u["phone"] = phone
+
+                if new_password:
+                    u["password"] = new_password
+                break
+
+        save_users(users)
+
+        form["full_name"] = full_name
+        form["phone"] = phone
+        success_msg = "Profile updated successfully."
+
+    return render_template(
+        "profile.html",
+        form=form,
+        field_errors=field_errors,
+        success_message=success_msg,
+    )
+@app.get("/admin/users")
+def admin_users():
+
+    q = (request.args.get("q") or "").strip().lower()
+    role = (request.args.get("role") or "all").strip().lower()
+    status = (request.args.get("status") or "all").strip().lower()
+    lockout = (request.args.get("lockout") or "all").strip().lower()
+
+    users = [_user_with_defaults(u) for u in load_users()]
+
+    # filtros
+    if q:
+        users = [
+            u for u in users
+            if q in (u.get("full_name","").lower()) or q in (u.get("email","").lower())
+        ]
+
+    if role != "all":
+        users = [u for u in users if (u.get("role","user").lower() == role)]
+
+    if status != "all":
+        users = [u for u in users if (u.get("status","active").lower() == status)]
+
+    if lockout != "all":
+        if lockout == "locked":
+            users = [u for u in users if (u.get("locked_until") or "").strip()]
+        elif lockout == "not_locked":
+            users = [u for u in users if not (u.get("locked_until") or "").strip()]
+
+    users.sort(key=lambda u: (u.get("full_name","").lower(), u.get("id", 0)))
+
+    return render_template(
+        "admin_users.html",
+        users=users,
+        filters={"q": q, "role": role, "status": status, "lockout": lockout},
+        total=len(users),
+    )
+
+@app.post("/admin/users/<int:user_id>/toggle")
+def admin_toggle_user(user_id: int):
+    users = load_users()
+    for u in users:
+        if int(u.get("id", 0)) == user_id:
+            u.setdefault("status", "active")
+            u["status"] = "disabled" if u["status"] == "active" else "active"
+            break
+    save_users(users)
+    return redirect(url_for("admin_users"))
+
+@app.post("/admin/users/<int:user_id>/role")
+def admin_change_role(user_id: int):
+    new_role = request.form.get("role", "user")
+
+    users = load_users()
+    for u in users:
+        if int(u.get("id", 0)) == user_id:
+            u["role"] = new_role
+            break
+    save_users(users)
+    return redirect(url_for("admin_users"))
 
 if __name__ == "__main__":
     app.run(debug=True)

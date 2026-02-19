@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% set title = "Profile - EventHub" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='profile.css') }}">
+
+<section class="section">
+  <div class="container">
+    <div class="profile-wrap">
+
+      <div class="profile-card">
+        <div class="profile-header">
+          <div>
+            <h2 class="profile-title">Profile Settings</h2>
+            <div class="muted small">Manage your public information and account details.</div>
+          </div>
+          <div class="profile-icon">👤</div>
+        </div>
+
+        {% if success_message %}
+          <div class="profile-success">{{ success_message }}</div>
+        {% endif %}
+
+        <form method="post" action="{{ url_for('profile') }}" class="profile-form">
+
+          <label class="auth-label" for="full_name">Full Name</label>
+          <div class="auth-input {% if field_errors.get('full_name') %}has-error{% endif %}">
+            <span class="auth-icon">👤</span>
+            <input id="full_name" name="full_name" type="text"
+                   value="{{ form.full_name }}"
+                   placeholder="John Doe" autocomplete="name">
+          </div>
+          {% if field_errors.get('full_name') %}
+            <div class="field-error">⛔ {{ field_errors.get('full_name') }}</div>
+          {% endif %}
+
+          <label class="auth-label" for="email">Email Address</label>
+          <div class="auth-input is-readonly">
+            <span class="auth-icon">✉️</span>
+            <input id="email" name="email" type="email"
+                   value="{{ form.email }}" readonly>
+          </div>
+
+          <label class="auth-label" for="phone">Phone Number</label>
+          <div class="auth-input {% if field_errors.get('phone') %}has-error{% endif %}">
+            <span class="auth-icon">📞</span>
+            <input id="phone" name="phone" type="text"
+                   value="{{ form.phone }}"
+                   placeholder="+57 3001234567" autocomplete="tel">
+          </div>
+          {% if field_errors.get('phone') %}
+            <div class="field-error">⛔ {{ field_errors.get('phone') }}</div>
+          {% endif %}
+
+            <div class="security-card">
+            <div class="security-left">
+                <div class="security-title">Account Security</div>
+                <div class="muted small">Change your password below.</div>
+            </div>
+            </div>
+
+            <div class="security-grid">
+            <div>
+                <label class="auth-label" for="current_password">Current Password</label>
+                <div class="auth-input">
+                <span class="auth-icon">🔑</span>
+                <input id="current_password" name="current_password" type="password" placeholder="••••••••">
+                </div>
+            </div>
+
+            <div>
+                <label class="auth-label" for="new_password">New Password</label>
+                <div class="auth-input">
+                <span class="auth-icon">🆕</span>
+                <input id="new_password" name="new_password" type="password" placeholder="••••••••">
+                </div>
+            </div>
+
+            <div>
+                <label class="auth-label" for="confirm_new_password">Confirm New Password</label>
+                <div class="auth-input">
+                <span class="auth-icon">✅</span>
+                <input id="confirm_new_password" name="confirm_new_password" type="password" placeholder="••••••••">
+                </div>
+            </div>
+            </div>
+
+            <div class="profile-actions">
+            <a class="btn btn-ghost" href="{{ url_for('dashboard') }}">Cancel Changes</a>
+            <button class="btn btn-primary" type="submit">Save Changes</button>
+            </div>
+        </form>
+        {% if success_message %}
+        <div class="profile-success">{{ success_message }}</div>
+        {% endif %}
+      </div>
+
+
+
+
+    </div>
+  </div>
+</section>
+{% endblock %}

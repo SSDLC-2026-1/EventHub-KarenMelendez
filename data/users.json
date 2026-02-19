@@ -3,8 +3,18 @@
     "id": 1,
     "full_name": "sara",
     "email": "test@tes.com",
-    "phone": "3001111111",
-    "password": "aaa111",
-    "confirm_password": "aaa111"
+    "phone": "3001111112",
+    "password": "aaa114",
+    "role": "admin",
+    "status": "active"
+  },
+    {
+    "id": 2,
+    "full_name": "pepito",
+    "email": "test3@tes.com",
+    "phone": "3001111112",
+    "password": "aaa114",
+    "role": "user",
+    "status": "active"
   }
 ]
