@@ -54,7 +54,21 @@ def get_current_user() -> Optional[dict]:
         return None
     return find_user_by_email(email)
 
+def require_login():
+    user = get_current_user()
+    if not user:
+        return redirect(url_for("login"))
+    return user
 
+def require_role(role: str):
+    user = get_current_user()
+    if not user:
+        return redirect(url_for("login"))
+
+    if user.get("role") != role:
+        abort(403)
+
+    return user
 
 def load_events() -> List[Event]:
     data = json.loads(EVENTS_PATH.read_text(encoding="utf-8"))
@@ -327,15 +341,23 @@ def register():
 
 @app.get("/dashboard")
 def dashboard():
-
+    user = require_login()
+    if not isinstance(user, dict):
+        return user  # redirect si no logueado
 
     paid = request.args.get("paid") == "1"
-    user = get_current_user()
-    return render_template("dashboard.html", user_name=(user.get("full_name") if user else "User"), paid=paid)
+
+    return render_template(
+        "dashboard.html",
+        user_name=user.get("full_name"),
+        paid=paid
+    )
 
 @app.route("/checkout/<int:event_id>", methods=["GET", "POST"])
 def checkout(event_id: int):
-
+    user = require_login()
+    if not isinstance(user, dict):
+        return user
 
     events = load_events()
     event = next((e for e in events if e.id == event_id), None)
@@ -394,7 +416,7 @@ def checkout(event_id: int):
 
     orders.append({
         "id": order_id,
-        "user_email": "PLACEHOLDER@EMAIL.COM",
+        "user_email": user.get("email"),
         "event_id": event.id,
         "event_title": event.title,
         "qty": qty,
@@ -465,6 +487,10 @@ def profile():
 @app.get("/admin/users")
 def admin_users():
 
+    user = require_role("admin")
+    if not isinstance(user, dict):
+        return user
+
     q = (request.args.get("q") or "").strip().lower()
     role = (request.args.get("role") or "all").strip().lower()
     status = (request.args.get("status") or "all").strip().lower()
@@ -472,7 +498,6 @@ def admin_users():
 
     users = [_user_with_defaults(u) for u in load_users()]
 
-    # filtros
     if q:
         users = [
             u for u in users
