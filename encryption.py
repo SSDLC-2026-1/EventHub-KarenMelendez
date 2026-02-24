@@ -69,68 +69,50 @@ def decrypt_aes(texto_cifrado_hex, nonce_hex, tag_hex, clave):
 
 
 def hash_password(password):
-    """
-    Genera un hash seguro usando:
+    #salt aleatoria de 16 bytes
+    salt = os.urandom(16)
 
-        PBKDF2-HMAC-SHA256
+    #parámetros
+    iterations = 200000
+    algorithm = "pbkdf2_sha256"
 
-    Requisitos:
+    # clave de 32 bytes
+    dk = hashlib.pbkdf2_hmac(
+        "sha256",                 
+        password.encode(),        
+        salt,                     
+        iterations,               
+        dklen=32                  
+    )
 
-    - Generar salt aleatoria de 16 bytes.
-    - Usar al menos 200000 iteraciones.
-    - Derivar clave de 32 bytes.
-    - Retornar un diccionario con:
-
-        {
-            "algorithm": "pbkdf2_sha256",
-            "iterations": ...,
-            "salt": salt_en_hex,
-            "hash": hash_en_hex
-        }
-
-    Pista:
-        hashlib.pbkdf2_hmac(...)
-    """
-
-    # TODO: Generar salt aleatoria
-
-    # TODO: Derivar clave usando pbkdf2_hmac
-
-    # TODO: Retornar diccionario con salt y hash en formato hex
-
-    pass
-
-
+    # valores en hex
+    return {
+        "algorithm": algorithm,
+        "iterations": iterations,
+        "salt": salt.hex(),
+        "hash": dk.hex()
+    }
 
 def verify_password(password, stored_data):
-    """
-    Verifica una contraseña contra el hash almacenado.
 
-    Debes:
+    # Extraer salt 
+    salt_hex = stored_data["salt"]
+    iterations = stored_data["iterations"]
+    stored_hash_hex = stored_data["hash"]
 
-    1. Extraer salt y iterations del diccionario.
-    2. Convertir salt de hex a bytes.
-    3. Recalcular el hash con la contraseña ingresada.
-    4. Comparar usando hmac.compare_digest().
-    5. Retornar True o False.
+    # Convertir salt de hex a bytes
+    salt = bytes.fromhex(salt_hex)
 
-    stored_data tiene esta estructura:
-
-        {
-            "algorithm": "...",
-            "iterations": ...,
-            "salt": "...",
-            "hash": "..."
-        }
-    """
-
-    # TODO: Extraer salt e iterations
-
-    # TODO: Recalcular hash
-
-    # TODO: Comparar con compare_digest
-
-    pass
+    # Recalcular hash 
+    new_hash = hashlib.pbkdf2_hmac(
+        "sha256",
+        password.encode(),
+        salt,
+        iterations,
+        dklen=32
+    )
+    #compare_digest 
+    return hmac.compare_digest(new_hash.hex(), stored_hash_hex)
 
 
 
@@ -157,9 +139,9 @@ if __name__ == "__main__":
     password = "Password123!"
 
     # Cuando implementen hash_password:
-    # pwd_data = hash_password(password)
-    # print("Hash generado:", pwd_data)
+    pwd_data = hash_password(password)
+    print("Hash generado:", pwd_data)
 
     # Cuando implementen verify_password:
-    # print("Verificación correcta:",
-    #       verify_password("Password123!", pwd_data))
+    print("Verificación correcta:",
+    verify_password("Password123!", pwd_data))
