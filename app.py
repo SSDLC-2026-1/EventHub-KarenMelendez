@@ -54,6 +54,10 @@ def get_current_user() -> Optional[dict]:
         return None
     return find_user_by_email(email)
 
+@app.context_processor
+def inject_user():
+    return {"get_current_user": get_current_user}
+
 def require_login():
     user = get_current_user()
     if not user:
