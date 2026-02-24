@@ -60,6 +60,9 @@ def decrypt_aes(texto_cifrado_hex, nonce_hex, tag_hex, clave):
     texto_bytes = cipher.decrypt_and_verify(texto_cifrado, tag)
 
     return texto_bytes.decode()
+
+
+
 # ==========================================================
 # PASSWORD HASHING (PBKDF2 - SHA256)
 # ==========================================================
@@ -145,8 +148,8 @@ if __name__ == "__main__":
     print("Tag:", tag)
 
     # Cuando implementen decrypt_aes, esto debe funcionar
-    # texto_descifrado = decrypt_aes(texto_cifrado, nonce, tag, clave)
-    # print("Texto descifrado:", texto_descifrado)
+    texto_descifrado = decrypt_aes(texto_cifrado, nonce, tag, clave)
+    print("Texto descifrado:", texto_descifrado)
 
 
     print("\n=== PRUEBA HASH ===")
