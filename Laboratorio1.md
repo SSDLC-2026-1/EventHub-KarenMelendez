@@ -6,7 +6,7 @@
 El objetivo de esta sección es evaluar la comprensión precisa de los conceptos teóricos cubiertos en clase. Las preguntas son de opción múltiple y siguen el modelo de examen del Certified Application Security Engineer y de DevSecOps Essentials.
 
 1. **¿Cuál de los siguientes no es un tipo de autorización?**
-   - [ ] a) Managed Access Control  
+   - [X] a) Managed Access Control  
    - [ ] b) Mandatory Access Control  
    - [ ] c) Discretionary Access Control  
    - [ ] d) Role Based Access Control  
