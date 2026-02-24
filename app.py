@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from datetime import timedelta
 from typing import List, Optional, Dict
 
 from flask import Flask, render_template, request, abort, url_for, redirect, session
@@ -22,6 +23,9 @@ ORDERS_PATH = BASE_DIR / "data" / "orders.json"
 CATEGORIES = ["All", "Music", "Tech", "Sports", "Business"]
 CITIES = ["Any", "New York", "San Francisco", "Berlin", "London", "Oakland", "San Jose"]
 
+MAX_FAILED_ATTEMPTS = 3
+LOCKOUT_SECONDS = 300
+failed_logins: Dict[str,dict] = {}
 
 @dataclass(frozen=True)
 class Event:
@@ -245,7 +249,6 @@ def login():
     password = request.form.get("password", "")
 
     field_errors = {}
-
     if not email.strip():
         field_errors["email"] = "Email is required."
     if not password.strip():
@@ -259,14 +262,30 @@ def login():
             form={"email": email},
         ), 400
 
+    state = failed_logins.setdefault(email, {"attempts": 0, "locked_until": None})
+    now = datetime.utcnow()
+    if state["locked_until"] and now < state["locked_until"]:
+        remaning = state["locked_until"] - now
+        mins = int(remaning.total_seconds() // 60) + 1
+        return render_template(
+            "login.html",
+            error = f"Account locked. Try again in {mins} min.",
+
+        ),403
+
     user = find_user_by_email(email)
     if not user or user.get("password") != password:
+        state["attempts"] += 1
+        if state["attempts"] > MAX_FAILED_ATTEMPTS:
+            state["locked_until"] = now + timedelta(seconds = LOCKOUT_SECONDS)
         return render_template(
             "login.html",
             error="Invalid credentials.",
             field_errors={"email": " ", "password": " "},
             form={"email": email},
         ), 401
+    state["attempts"] = 0
+    state["locked_until"] = None
 
     session["user_email"] = (user.get("email") or "").strip().lower()
 
