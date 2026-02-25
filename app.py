@@ -268,14 +268,33 @@ def login():
 
     field_errors = {}
     if not email.strip():
-        field_errors["email"] = "Email is required."
+        field_errors.setdefault("email", []).append("Campo requerido.")
     if not password.strip():
-        field_errors["password"] = "Password is required."
+        field_errors.setdefault("password", []).append("Campo requerido.")
 
     if field_errors:
         return render_template(
             "login.html",
-            error="Please fix the highlighted fields.",
+            error="Por favor, corrige los campos resaltados.",
+            field_errors=field_errors,
+            form={"email": email},
+        ), 400
+
+    # Validar formato básico del email
+    email_clean = email.strip().lower()
+    if len(email_clean) > 254:
+        field_errors.setdefault("email", []).append("Longitud máxima de 254 caracteres.")
+    if email_clean.count("@") != 1:
+        field_errors.setdefault("email", []).append("Debe contener exactamente un @.")
+    if "@" in email_clean and "." not in email_clean.split("@")[1]:
+        field_errors.setdefault("email", []).append("El dominio debe incluir al menos un punto.")
+    if " " in email_clean:
+        field_errors.setdefault("email", []).append("No debe contener espacios.")
+
+    if field_errors:
+        return render_template(
+            "login.html",
+            error="Formato de email inválido.",
             field_errors=field_errors,
             form={"email": email},
         ), 400
@@ -314,16 +333,98 @@ def register():
     if request.method == "GET":
         return render_template("register.html")
 
-    full_name = request.form.get("full_name", "")
-    email = request.form.get("email", "")
-    phone = request.form.get("phone", "")
+    full_name = request.form.get("full_name", "").strip()
+    email = request.form.get("email", "").strip().lower()
+    phone = request.form.get("phone", "").replace(" ", "")
     password = request.form.get("password", "")
     confirm_password = request.form.get("confirm_password", "")
+
+    errors = {}
+
+    # Validate full name
+    full_name_clean = " ".join(full_name.split())  # collapse spaces
+    if len(full_name_clean) < 2 or len(full_name_clean) > 60:
+        errors.setdefault("full_name", []).append("Minimum length of 2 characters and maximum of 60.")
+    if not all(c.isalpha() or c in " '-" for c in full_name_clean):
+        errors.setdefault("full_name", []).append("Only letters (including accented), spaces, apostrophes, and hyphens.")
+
+    # Validate email
+    if len(email) > 254:
+        errors.setdefault("email", []).append("Maximum length of 254 characters.")
+    if email.count("@") != 1:
+        errors.setdefault("email", []).append("Must contain exactly one @ symbol.")
+    if "@" in email:
+        local, domain = email.split("@")
+        if not local or not domain or "." not in domain:
+            errors.setdefault("email", []).append("Must have local part and domain with at least one dot.")
+    if " " in email:
+        errors.setdefault("email", []).append("Must not contain spaces.")
+
+    # Validate phone
+    if not phone.isdigit():
+        errors.setdefault("phone", []).append("Only digits allowed.")
+    if not 7 <= len(phone) <= 15:
+        errors.setdefault("phone", []).append("Between 7 and 15 digits.")
+
+    # Validate password
+    if len(password) < 8 or len(password) > 64:
+        errors.setdefault("password", []).append("Minimum length of 8 characters and maximum of 64.")
+    if " " in password:
+        errors.setdefault("password", []).append("Must not contain spaces.")
+    if password.lower() == email:
+        errors.setdefault("password", []).append("Cannot be the same as the email.")
+    if not any(c.isupper() for c in password):
+        errors.setdefault("password", []).append("Must contain at least one uppercase letter.")
+    if not any(c.islower() for c in password):
+        errors.setdefault("password", []).append("Must contain at least one lowercase letter.")
+    if not any(c.isdigit() for c in password):
+        errors.setdefault("password", []).append("Must contain at least one digit.")
+    if not any(c in "!@#$%^&*()-_=+[]{}<>?" for c in password):
+        errors.setdefault("password", []).append("Must contain at least one special character (e.g., !@#$%^&*()-_=+[]{}<>?).")
+
+    if password != confirm_password:
+        errors.setdefault("confirm_password", []).append("Must match the password exactly.")
+
+    
+    if errors:
+        # Build bullet list with field names
+        field_labels = {
+            "full_name": "Full Name",
+            "email": "Email",
+            "phone": "Phone",
+            "password": "Password",
+            "confirm_password": "Confirm Password",
+        }
+
+        error_items = []
+        for field, messages in errors.items():
+            label = field_labels.get(field, field)
+            for msg in messages:
+                error_items.append(f"<li><strong>{label}:</strong> {msg}</li>")
+
+        error_html = "<ul>" + "".join(error_items) + "</ul>"
+
+        return render_template(
+            "register.html",
+            error=error_html,
+            field_errors=errors,
+            form={
+                "full_name": full_name,
+                "email": email,
+                "phone": phone,
+            }
+        ), 400
 
     if user_exists(email):
         return render_template(
             "register.html",
-            error="This email is already registered. Try signing in."
+            error="Este email ya está registrado.",
+            field_errors={"email": "Ya existe."},
+            form={
+                "full_name": full_name,
+                "email": email,
+                "phone": phone,
+            }
         ), 400
 
     users = load_users()
@@ -331,11 +432,11 @@ def register():
 
     users.append({
         "id": next_id,
-        "full_name": full_name,
+        "full_name": full_name_clean,
         "email": email,
         "phone": phone,
         "password": password,
-        "role": "user",          
+        "role": "user",
         "status": "active",
     })
 
@@ -464,23 +565,70 @@ def profile():
         new_password = request.form.get("new_password", "")
         confirm_new_password = request.form.get("confirm_new_password", "")
 
+        # Validate
+        field_errors = {}
+        full_name_clean = " ".join(full_name.split())
+        if len(full_name_clean) < 2 or len(full_name_clean) > 60:
+            field_errors.setdefault("full_name", []).append("Longitud entre 2 y 60 caracteres.")
+        if not all(c.isalpha() or c in " '-" for c in full_name_clean):
+            field_errors.setdefault("full_name", []).append("Solo letras, espacios, apóstrofes y guiones.")
+
+        phone_clean = phone.replace(" ", "")
+        if not phone_clean.isdigit():
+            field_errors.setdefault("phone", []).append("Solo dígitos.")
+        if not 7 <= len(phone_clean) <= 15:
+            field_errors.setdefault("phone", []).append("Entre 7 y 15 dígitos.")
+
+        changing_password = bool(new_password.strip())
+        if changing_password:
+            if current_password != user.get("password"):
+                field_errors.setdefault("current_password", []).append("Contraseña actual incorrecta.")
+            if len(new_password) < 8 or len(new_password) > 64:
+                field_errors.setdefault("new_password", []).append("Longitud entre 8 y 64 caracteres.")
+            if " " in new_password:
+                field_errors.setdefault("new_password", []).append("No espacios en blanco.")
+            if new_password.lower() == user.get("email", "").lower():
+                field_errors.setdefault("new_password", []).append("No puede ser igual al email.")
+            if not any(c.isupper() for c in new_password):
+                field_errors.setdefault("new_password", []).append("Al menos una mayúscula.")
+            if not any(c.islower() for c in new_password):
+                field_errors.setdefault("new_password", []).append("Al menos una minúscula.")
+            if not any(c.isdigit() for c in new_password):
+                field_errors.setdefault("new_password", []).append("Al menos un número.")
+            if not any(c in "!@#$%^&*()-_=+[]{}<>?" for c in new_password):
+                field_errors.setdefault("new_password", []).append("Al menos un carácter especial.")
+            if new_password != confirm_new_password:
+                field_errors.setdefault("confirm_new_password", []).append("Debe coincidir con la nueva contraseña.")
+
+        if field_errors:
+            return render_template(
+                "profile.html",
+                form={
+                    "full_name": full_name,
+                    "email": user.get("email", ""),
+                    "phone": phone,
+                },
+                field_errors=field_errors,
+                success_message=None,
+            ), 400
+
+        # Update
         users = load_users()
         email_norm = (user.get("email") or "").strip().lower()
 
         for u in users:
             if (u.get("email") or "").strip().lower() == email_norm:
-                u["full_name"] = full_name
-                u["phone"] = phone
-
-                if new_password:
+                u["full_name"] = full_name_clean
+                u["phone"] = phone_clean
+                if changing_password:
                     u["password"] = new_password
                 break
 
         save_users(users)
 
-        form["full_name"] = full_name
+        form["full_name"] = full_name_clean
         form["phone"] = phone
-        success_msg = "Profile updated successfully."
+        success_msg = "Perfil actualizado."
 
     return render_template(
         "profile.html",

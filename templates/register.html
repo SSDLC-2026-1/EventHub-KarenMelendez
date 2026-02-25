@@ -17,7 +17,7 @@
       <div class="auth-banner auth-banner-ok">{{ demo_message }}</div>
     {% endif %}
     {% if error %}
-        <div class="auth-banner auth-banner-error">{{ error }}</div>
+        <div class="auth-banner auth-banner-error">{{ error|safe }}</div>
     {% endif %}
 
     <form class="auth-form" method="post" action="{{ url_for('register') }}">
