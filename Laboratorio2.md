@@ -4,35 +4,35 @@
 ## Sección Teórica 
 El objetivo de esta sección es evaluar la comprensión precisa de los conceptos teóricos cubiertos en clase. Las preguntas son de opción múltiple y siguen el modelo de examen del Certified Application Security Engineer y de DevSecOps Essentials.
 
-1. **¿Cuál de los siguientes no es un tipo de autorización?**
-   - [ ] a) Managed Access Control  
-   - [ ] b) Mandatory Access Control  
-   - [ ] c) Discretionary Access Control  
-   - [ ] d) Role Based Access Control  
+1. **¿Qué tipo de requisito especifica cómo debe comportarse la aplicación?**
+   - [ ] a) Requisitos funcionales 
+   - [ ] b) Requisitos no funcionales  
+   - [ ] c) Requisitos de los interesados (stakeholders)  
+   - [ ] d) Requisitos de recursos 
 
-2. **¿Qué mecanismo de seguridad implementarías para restringir el acceso de los usuarios a recursos específicos dentro de una aplicación?**
-   - [ ] a) Autenticación  
-   - [ ] b) Autorización  
-   - [ ] c) Delegación  
-   - [ ] d) Impersonación  
+2. **¿Por qué es importante la seguridad de las aplicaciones?**
+   - [ ] a) Para aumentar el riesgo de brechas de datos  
+   - [ ] b) Para prevenir pérdidas financieras  
+   - [ ] c) Para mejorar el rendimiento de la aplicación  
+   - [ ] d) Para incrementar las repercusiones legales  
 
-3. **Según las prácticas de autenticación y autorización segura en el desarrollo de aplicaciones, ¿con qué tipo de privilegios no se debe ejecutar una aplicación?**
-   - [ ] a) Privilegios de cuenta de administrador  
-   - [ ] b) Privilegios de cuenta de usuario  
-   - [ ] c) Privilegios de cuenta de invitado  
-   - [ ] d) Privilegios de cuenta normal  
+3. **¿Qué tipo de riesgos de seguridad están incluidos en el OWASP Top 10?**
+   - [ ] a) Ataques de inyección y fallas en la autenticación  
+   - [ ] b) Software y especificaciones de hardware desactualizados
+   - [ ] c) Deficiencias en el diseño de la interfaz de usuario
+   - [ ] d) Problemas de configuración de red
 
-4. **¿Cuál de las siguientes técnicas de seguridad implica el proceso de convertir datos potencialmente peligrosos en formatos seguros que se pueden mostrar o almacenar de forma segura?**
-   - [ ] a) Input Validation  
-   - [ ] b) Encryption and Hashing  
-   - [ ] c) Output Encoding  
-   - [ ] d) Access Control  
+4. **¿Qué es una referencia directa insegura a objetos (IDOR)?**
+   - [ ] a) Un método en el que la base de datos queda expuesta
+   - [ ] b) Un método en el que se exponen objetos internos
+   - [ ] c) Un método en el que se exponen datos cifrados 
+   - [ ] d) Un método en el que se exponen datos de autenticación de usuarios  
 
-5. **¿Cuál es el principio central de la práctica de seguridad "Secure by Default"?**
-   - [ ] a) Los sistemas deben estar diseñados para fallar en un estado seguro.  
-   - [ ] b) Diseñar la seguridad en los niveles físico, identidad y acceso, perímetro, red, cómputo, aplicación y datos.  
-   - [ ] c) Requiere autenticación y autorización para cada acción.  
-   - [ ] d) Los requisitos de seguridad deben definirse al inicio del proceso de desarrollo de la aplicación.  
+5. **¿Qué modelo de clasificación de amenazas se utiliza para clasificar amenazas durante el proceso de modelado de amenazas?**
+   - [ ] a) SMART  
+   - [ ] b) STRIDE 
+   - [ ] c) RED 
+   - [ ] d) DREAD
 
 ## Sección Práctica 
 
