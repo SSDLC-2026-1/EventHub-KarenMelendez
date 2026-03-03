@@ -500,12 +500,21 @@ def checkout(event_id: int):
         name_on_card=name_on_card,
         billing_email=billing_email
     )
+    clean.pop("cvv", None)
+    clean.pop("cvc", None)
+    clean.pop("card_number", None)
+    clean.pop("pan", None)
+
+    digits = "".join(ch for ch in card_number if ch.isdigit())
+    last4 = digits[-4:] if len(digits) >= 4 else ""
+    masked = f"**** **** **** {last4}" if last4 else ""
 
     form_data = {
-        "exp_date": clean.get("exp_date", ""),
-        "name_on_card": clean.get("name_on_card", ""),
-        "billing_email": clean.get("billing_email", ""),
-        "card": clean.get("card", "")
+    "exp_date": clean.get("exp_date", ""),
+    "name_on_card": clean.get("name_on_card", ""),
+    "billing_email": clean.get("billing_email", ""),
+    "card_last4": last4,
+    "card_masked": masked
     }
 
     if errors:
