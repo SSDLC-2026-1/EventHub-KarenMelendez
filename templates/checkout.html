@@ -45,7 +45,12 @@
         <label class="auth-label" for="card_number">Card Number</label>
         <div class="auth-input">
             <span class="auth-icon">💳</span>
-            <input id="card_number" name="card_number" type="text" placeholder="•••• •••• •••• ••••">
+            <input id="card_number"
+              name="card_number"
+              type="password"
+              inputmode="numeric"
+              autocomplete="cc-number"
+              placeholder="•••• •••• •••• ••••">
         </div>
         {% if errors.get("card_number") %}
             <div class="auth-help auth-help-error">{{ errors["card_number"] }}</div>
@@ -71,7 +76,12 @@
             <label class="auth-label" for="cvv">CVV</label>
             <div class="auth-input">
                 <span class="auth-icon">🔒</span>
-                <input id="cvv" name="cvv" type="text" placeholder="•••">
+                <input id="cvv"
+                  name="cvv"
+                  type="password"
+                  inputmode="numeric"
+                  autocomplete="cc-csc"
+                  placeholder="•••">
             </div>
             {% if errors.get("cvv") %}
                 <div class="auth-help auth-help-error">{{ errors["cvv"] }}</div>
