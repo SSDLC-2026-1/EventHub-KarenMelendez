@@ -5,7 +5,7 @@
 El objetivo de esta sección es evaluar la comprensión precisa de los conceptos teóricos cubiertos en clase. Las preguntas son de opción múltiple y siguen el modelo de examen del Certified Application Security Engineer y de DevSecOps Essentials.
 
 1. **¿Qué tipo de requisito especifica cómo debe comportarse la aplicación?**
-   - [ ] a) Requisitos funcionales 
+   - [X] a) Requisitos funcionales 
    - [ ] b) Requisitos no funcionales  
    - [ ] c) Requisitos de los interesados (stakeholders)  
    - [ ] d) Requisitos de recursos 
@@ -13,24 +13,24 @@ El objetivo de esta sección es evaluar la comprensión precisa de los conceptos
 2. **¿Por qué es importante la seguridad de las aplicaciones?**
    - [ ] a) Para aumentar el riesgo de brechas de datos  
    - [ ] b) Para prevenir pérdidas financieras  
-   - [ ] c) Para mejorar el rendimiento de la aplicación  
+   - [X] c) Para mejorar el rendimiento de la aplicación  
    - [ ] d) Para incrementar las repercusiones legales  
 
 3. **¿Qué tipo de riesgos de seguridad están incluidos en el OWASP Top 10?**
-   - [ ] a) Ataques de inyección y fallas en la autenticación  
+   - [X] a) Ataques de inyección y fallas en la autenticación  
    - [ ] b) Software y especificaciones de hardware desactualizados
    - [ ] c) Deficiencias en el diseño de la interfaz de usuario
    - [ ] d) Problemas de configuración de red
 
 4. **¿Qué es una referencia directa insegura a objetos (IDOR)?**
    - [ ] a) Un método en el que la base de datos queda expuesta
-   - [ ] b) Un método en el que se exponen objetos internos
+   - [X] b) Un método en el que se exponen objetos internos
    - [ ] c) Un método en el que se exponen datos cifrados 
    - [ ] d) Un método en el que se exponen datos de autenticación de usuarios  
 
 5. **¿Qué modelo de clasificación de amenazas se utiliza para clasificar amenazas durante el proceso de modelado de amenazas?**
    - [ ] a) SMART  
-   - [ ] b) STRIDE 
+   - [X] b) STRIDE 
    - [ ] c) RED 
    - [ ] d) DREAD
 
