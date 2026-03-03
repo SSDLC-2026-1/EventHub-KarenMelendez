@@ -51,7 +51,8 @@
               inputmode="numeric"
               autocomplete="cc-number"
               placeholder="•••• •••• •••• ••••">
-        </div>
+            <span id="card_last4_overlay" class="card-last4-overlay"></span>
+          </div>
         {% if errors.get("card_number") %}
             <div class="auth-help auth-help-error">{{ errors["card_number"] }}</div>
         {% endif %}
@@ -117,4 +118,20 @@
     </div>
   </div>
 </section>
+<script>
+(() => {
+  const input = document.getElementById("card_number");
+  const overlay = document.getElementById("card_last4_overlay");
+
+  function update() {
+    const digits = (input.value || "").replace(/\D/g, "");
+    const last4 = digits.length >= 4 ? digits.slice(-4) : "";
+    overlay.textContent = last4;
+  }
+
+  input.addEventListener("input", update);
+  input.addEventListener("focus", update);
+  update();
+})();
+</script>
 {% endblock %}
