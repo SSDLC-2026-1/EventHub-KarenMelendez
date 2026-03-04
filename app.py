@@ -10,6 +10,7 @@ from pathlib import Path
 import json
 
 from validation import validate_payment_form
+from encryption import hash_password, verify_password, encrypt_aes
 
 app = Flask(__name__)
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -26,6 +27,7 @@ CITIES = ["Any", "New York", "San Francisco", "Berlin", "London", "Oakland", "Sa
 MAX_FAILED_ATTEMPTS = 3
 LOCKOUT_SECONDS = 300
 failed_logins: Dict[str,dict] = {}
+GLOBAL_AES_KEY = b"1234567890123456"
 
 @dataclass(frozen=True)
 class Event:
@@ -255,78 +257,82 @@ def buy_ticket(event_id: int):
 
     return redirect(url_for("checkout", event_id=event.id, qty=qty))
 
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
+
     if request.method == "GET":
-        registered = request.args.get("registered")
-        msg = "Account created successfully. Please sign in." if registered == "1" else None
+        msg = "Account created successfully. Please sign in." \
+            if request.args.get("registered") == "1" else None
         return render_template("login.html", info_message=msg)
 
-    email = request.form.get("email", "")
-    password = request.form.get("password", "")
+    email = request.form.get("email", "").strip().lower()
+    password = request.form.get("password", "").strip()
 
-    field_errors = {}
-    if not email.strip():
-        field_errors.setdefault("email", []).append("Campo requerido.")
-    if not password.strip():
-        field_errors.setdefault("password", []).append("Campo requerido.")
+    # Validación básica
+    errors = {}
 
-    if field_errors:
+    if not email:
+        errors.setdefault("email", []).append("Campo requerido.")
+    if not password:
+        errors.setdefault("password", []).append("Campo requerido.")
+
+    if errors:
         return render_template(
             "login.html",
             error="Por favor, corrige los campos resaltados.",
-            field_errors=field_errors,
+            field_errors=errors,
             form={"email": email},
         ), 400
 
-    # Validar formato básico del email
-    email_clean = email.strip().lower()
-    if len(email_clean) > 254:
-        field_errors.setdefault("email", []).append("Longitud máxima de 254 caracteres.")
-    if email_clean.count("@") != 1:
-        field_errors.setdefault("email", []).append("Debe contener exactamente un @.")
-    if "@" in email_clean and "." not in email_clean.split("@")[1]:
-        field_errors.setdefault("email", []).append("El dominio debe incluir al menos un punto.")
-    if " " in email_clean:
-        field_errors.setdefault("email", []).append("No debe contener espacios.")
+    # Validación simple de formato
+    if len(email) > 254 or email.count("@") != 1 or \
+       "." not in email.split("@")[-1] or " " in email:
 
-    if field_errors:
         return render_template(
             "login.html",
             error="Formato de email inválido.",
-            field_errors=field_errors,
+            field_errors={"email": ["Formato inválido."]},
             form={"email": email},
         ), 400
 
+    # Control de bloqueo
     state = failed_logins.setdefault(email, {"attempts": 0, "locked_until": None})
     now = datetime.utcnow()
+
     if state["locked_until"] and now < state["locked_until"]:
-        remaning = state["locked_until"] - now
-        mins = int(remaning.total_seconds() // 60) + 1
+        mins = int((state["locked_until"] - now).total_seconds() // 60) + 1
         return render_template(
             "login.html",
-            error = f"Account locked. Try again in {mins} min.",
+            error=f"Account locked. Try again in {mins} min."
+        ), 403
 
-        ),403
-
+    # Buscar usuario
     user = find_user_by_email(email)
-    if not user or user.get("password") != password:
+
+    if not user or not verify_password(password, user.get("password")):
         state["attempts"] += 1
-        if state["attempts"] > MAX_FAILED_ATTEMPTS:
-            state["locked_until"] = now + timedelta(seconds = LOCKOUT_SECONDS)
+
+        if state["attempts"] >= MAX_FAILED_ATTEMPTS:
+            state["locked_until"] = now + timedelta(seconds=LOCKOUT_SECONDS)
+
         return render_template(
             "login.html",
             error="Invalid credentials.",
             field_errors={"email": " ", "password": " "},
             form={"email": email},
         ), 401
+
+    # Login exitoso
     state["attempts"] = 0
     state["locked_until"] = None
-
-    session["user_email"] = (user.get("email") or "").strip().lower()
+    session["user_email"] = email
 
     return redirect(url_for("dashboard"))
+
+@app.get("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("index"))
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -341,72 +347,57 @@ def register():
 
     errors = {}
 
-    # Validate full name
-    full_name_clean = " ".join(full_name.split())  # collapse spaces
-    if len(full_name_clean) < 2 or len(full_name_clean) > 60:
-        errors.setdefault("full_name", []).append("Minimum length of 2 characters and maximum of 60.")
+    full_name_clean = " ".join(full_name.split())
+    if not (2 <= len(full_name_clean) <= 60):
+        errors.setdefault("full_name", []).append(
+            "Minimum length of 2 characters and maximum of 60."
+        )
     if not all(c.isalpha() or c in " '-" for c in full_name_clean):
-        errors.setdefault("full_name", []).append("Only letters (including accented), spaces, apostrophes, and hyphens.")
+        errors.setdefault("full_name", []).append(
+            "Only letters (including accented), spaces, apostrophes, and hyphens."
+        )
 
-    # Validate email
-    if len(email) > 254:
-        errors.setdefault("email", []).append("Maximum length of 254 characters.")
-    if email.count("@") != 1:
-        errors.setdefault("email", []).append("Must contain exactly one @ symbol.")
-    if "@" in email:
+    if (
+        len(email) > 254
+        or email.count("@") != 1
+        or " " in email
+    ):
+        errors.setdefault("email", []).append("Invalid email format.")
+    else:
         local, domain = email.split("@")
-        if not local or not domain or "." not in domain:
-            errors.setdefault("email", []).append("Must have local part and domain with at least one dot.")
-    if " " in email:
-        errors.setdefault("email", []).append("Must not contain spaces.")
+        if not local or "." not in domain:
+            errors.setdefault("email", []).append(
+                "Must have local part and domain with at least one dot."
+            )
 
-    # Validate phone
-    if not phone.isdigit():
-        errors.setdefault("phone", []).append("Only digits allowed.")
-    if not 7 <= len(phone) <= 15:
-        errors.setdefault("phone", []).append("Between 7 and 15 digits.")
+    if not (phone.isdigit() and 7 <= len(phone) <= 15):
+        errors.setdefault("phone", []).append(
+            "Only digits allowed. Between 7 and 15 digits."
+        )
 
-    # Validate password
-    if len(password) < 8 or len(password) > 64:
-        errors.setdefault("password", []).append("Minimum length of 8 characters and maximum of 64.")
-    if " " in password:
-        errors.setdefault("password", []).append("Must not contain spaces.")
-    if password.lower() == email:
-        errors.setdefault("password", []).append("Cannot be the same as the email.")
-    if not any(c.isupper() for c in password):
-        errors.setdefault("password", []).append("Must contain at least one uppercase letter.")
-    if not any(c.islower() for c in password):
-        errors.setdefault("password", []).append("Must contain at least one lowercase letter.")
-    if not any(c.isdigit() for c in password):
-        errors.setdefault("password", []).append("Must contain at least one digit.")
-    if not any(c in "!@#$%^&*()-_=+[]{}<>?" for c in password):
-        errors.setdefault("password", []).append("Must contain at least one special character (e.g., !@#$%^&*()-_=+[]{}<>?).")
+    password_rules = [
+        (8 <= len(password) <= 64, "Minimum length of 8 characters and maximum of 64."),
+        (" " not in password, "Must not contain spaces."),
+        (password.lower() != email, "Cannot be the same as the email."),
+        (any(c.isupper() for c in password), "Must contain at least one uppercase letter."),
+        (any(c.islower() for c in password), "Must contain at least one lowercase letter."),
+        (any(c.isdigit() for c in password), "Must contain at least one digit."),
+        (any(c in "!@#$%^&*()-_=+[]{}<>?" for c in password),
+         "Must contain at least one special character."),
+    ]
+
+    for condition, message in password_rules:
+        if not condition:
+            errors.setdefault("password", []).append(message)
 
     if password != confirm_password:
-        errors.setdefault("confirm_password", []).append("Must match the password exactly.")
+        errors.setdefault("confirm_password", []).append(
+            "Must match the password exactly."
+        )
 
-    
     if errors:
-        # Build bullet list with field names
-        field_labels = {
-            "full_name": "Full Name",
-            "email": "Email",
-            "phone": "Phone",
-            "password": "Password",
-            "confirm_password": "Confirm Password",
-        }
-
-        error_items = []
-        for field, messages in errors.items():
-            label = field_labels.get(field, field)
-            for msg in messages:
-                error_items.append(f"<li><strong>{label}:</strong> {msg}</li>")
-
-        error_html = "<ul>" + "".join(error_items) + "</ul>"
-
         return render_template(
             "register.html",
-            error=error_html,
             field_errors=errors,
             form={
                 "full_name": full_name,
@@ -418,8 +409,7 @@ def register():
     if user_exists(email):
         return render_template(
             "register.html",
-            error="Este email ya está registrado.",
-            field_errors={"email": "Ya existe."},
+            field_errors={"email": ["Ya existe."]},
             form={
                 "full_name": full_name,
                 "email": email,
@@ -427,15 +417,18 @@ def register():
             }
         ), 400
 
+    phone_chiper , phone_nonce, phone_tag = encrypt_aes(phone, GLOBAL_AES_KEY)
+    billing_email_chiper , billing_email_nonce, billing_email_tag = encrypt_aes(email, GLOBAL_AES_KEY)
+
     users = load_users()
-    next_id = (max([u.get("id", 0) for u in users], default=0) + 1)
+    next_id = max((u.get("id", 0) for u in users), default=0) + 1
 
     users.append({
         "id": next_id,
         "full_name": full_name_clean,
-        "email": email,
-        "phone": phone,
-        "password": password,
+        "email": {"cipher": billing_email_chiper, "nonce": billing_email_nonce, "tag": billing_email_tag},
+        "phone": {"cipher": phone_chiper, "nonce": phone_nonce, "tag": phone_tag},  
+        "password": hash_password(password), 
         "role": "user",
         "status": "active",
     })
@@ -590,7 +583,7 @@ def profile():
 
         changing_password = bool(new_password.strip())
         if changing_password:
-            if current_password != user.get("password"):
+            if not verify_password(current_password, user.get("password")):
                 field_errors.setdefault("current_password", []).append("Contraseña actual incorrecta.")
             if len(new_password) < 8 or len(new_password) > 64:
                 field_errors.setdefault("new_password", []).append("Longitud entre 8 y 64 caracteres.")

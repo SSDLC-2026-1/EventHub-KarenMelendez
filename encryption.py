@@ -95,24 +95,30 @@ def hash_password(password):
 
 def verify_password(password, stored_data):
 
-    # Extraer salt 
-    salt_hex = stored_data["salt"]
-    iterations = stored_data["iterations"]
-    stored_hash_hex = stored_data["hash"]
+    # Caso 1: contraseña vieja en texto plano
+    if isinstance(stored_data, str):
+        return password == stored_data
 
-    # Convertir salt de hex a bytes
-    salt = bytes.fromhex(salt_hex)
+    # Caso 2: contraseña hasheada
+    if isinstance(stored_data, dict):
+        try:
+            salt = bytes.fromhex(stored_data["salt"])
+            iterations = stored_data["iterations"]
+            stored_hash = bytes.fromhex(stored_data["hash"])
+        except (KeyError, TypeError, ValueError):
+            return False
 
-    # Recalcular hash 
-    new_hash = hashlib.pbkdf2_hmac(
-        "sha256",
-        password.encode(),
-        salt,
-        iterations,
-        dklen=32
-    )
-    #compare_digest 
-    return hmac.compare_digest(new_hash.hex(), stored_hash_hex)
+        new_hash = hashlib.pbkdf2_hmac(
+            "sha256",
+            password.encode(),
+            salt,
+            iterations,
+            dklen=32
+        )
+
+        return hmac.compare_digest(new_hash, stored_hash)
+
+    return False
 
 
 

@@ -36,7 +36,9 @@
             Admin Panel
           </a>
         {% endif %}
-
+        <a class="btn btn-secondary" href="{{ url_for('logout') }}">
+          Logout
+        </a>
       {% else %}
         <a class="btn btn-ghost" href="{{ url_for('login') }}">Login</a>
         <a class="btn btn-primary" href="{{ url_for('register') }}">Register</a>
