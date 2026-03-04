@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from datetime import timedelta
+from datetime import timedelta, timezone
 from typing import List, Optional, Dict
 
 from flask import Flask, render_template, request, abort, url_for, redirect, session
@@ -28,6 +28,7 @@ MAX_FAILED_ATTEMPTS = 3
 LOCKOUT_SECONDS = 300
 failed_logins: Dict[str,dict] = {}
 GLOBAL_AES_KEY = b"1234567890123456"
+SESSION_TIMEOUT = 180  # 3 minutos
 
 @dataclass(frozen=True)
 class Event:
@@ -62,13 +63,40 @@ def inject_user():
 
 def require_login():
     user = get_current_user()
+
     if not user:
         return redirect(url_for("login"))
+
+    if is_session_expired():
+        session.clear()
+        return redirect(url_for("login"))
+
     return user
+
+def is_session_expired() -> bool:
+    login_time_str = session.get("login_time")
+
+    if not login_time_str:
+        return True
+
+    try:
+        login_time = datetime.fromisoformat(login_time_str)
+    except ValueError:
+        return True
+
+    now = datetime.now(timezone.utc)
+    elapsed = (now - login_time).total_seconds()
+
+    return elapsed > SESSION_TIMEOUT
 
 def require_role(role: str):
     user = get_current_user()
+
     if not user:
+        return redirect(url_for("login"))
+
+    if is_session_expired():
+        session.clear()
         return redirect(url_for("login"))
 
     if user.get("role") != role:
@@ -326,7 +354,7 @@ def login():
     state["attempts"] = 0
     state["locked_until"] = None
     session["user_email"] = email
-
+    session["login_time"] = datetime.now(timezone.utc).isoformat()
     return redirect(url_for("dashboard"))
 
 @app.get("/logout")
