@@ -589,9 +589,8 @@ def checkout(event_id: int):
 @app.route("/profile", methods=["GET", "POST"])
 def profile():
     user = require_login()
-    if not user:
-        session.clear()
-        return redirect(url_for("login"))
+    if not isinstance(user, dict):
+        return user
 
     form = {
         "full_name": user.get("full_name", ""),

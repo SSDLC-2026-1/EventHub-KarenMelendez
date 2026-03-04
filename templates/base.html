@@ -84,24 +84,25 @@
       </div>
     </div>
   </footer>
-  {% if session.get("login_ts") %}
+  {% if current_user and session.get("login_ts") and request.endpoint not in ["login", "register"] %}
 <script>
 (() => {
   const SESSION_TIMEOUT_MS = 180 * 1000;
-
   const loginTs = Number("{{ session.get('login_ts') }}"); // seconds
   if (!loginTs) return;
 
   const elapsed = Date.now() - (loginTs * 1000);
   const remaining = SESSION_TIMEOUT_MS - elapsed;
 
+  const target = "{{ url_for('session_expired') }}"; //  limpia la sesión
+
   if (remaining <= 0) {
-    window.location.href = "{{ url_for('login', expired='1') }}";
+    window.location.href = target;
     return;
   }
 
   setTimeout(() => {
-    window.location.href = "{{ url_for('login', expired='1') }}";
+    window.location.href = target;
   }, remaining);
 })();
 </script>
