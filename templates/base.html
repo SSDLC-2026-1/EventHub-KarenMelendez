@@ -84,5 +84,24 @@
       </div>
     </div>
   </footer>
+  {% if session.get("login_time") %}
+<script>
+(() => {
+  const SESSION_TIMEOUT_MS = 180 * 1000;
+  const loginTime = new Date("{{ session.get('login_time') }}").getTime();
+  const elapsed = Date.now() - loginTime;
+  const remaining = SESSION_TIMEOUT_MS - elapsed;
+
+  if (remaining <= 0) {
+    window.location.href = "{{ url_for('session_expired') }}";
+    return;
+  }
+
+  setTimeout(() => {
+    window.location.href = "{{ url_for('session_expired') }}";
+  }, remaining);
+})();
+</script>
+{% endif %}
 </body>
 </html>

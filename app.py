@@ -89,6 +89,27 @@ def is_session_expired() -> bool:
 
     return elapsed > SESSION_TIMEOUT
 
+@app.get("/session-expired")
+def session_expired():
+    session.clear()
+    return redirect(url_for("login", expired="1"))
+
+@app.before_request
+def enforce_session_timeout():
+    exempt_endpoints = {
+        "index", "login", "register", "event_detail", "static"
+    }
+
+    if request.endpoint is None:
+        return
+
+    if request.endpoint in exempt_endpoints:
+        return
+
+    if session.get("user_email") and is_session_expired():
+        session.clear()
+        return redirect(url_for("login", expired="1"))
+
 def require_role(role: str):
     user = get_current_user()
 
