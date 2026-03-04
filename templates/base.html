@@ -84,21 +84,24 @@
       </div>
     </div>
   </footer>
-  {% if session.get("login_time") %}
+  {% if session.get("login_ts") %}
 <script>
 (() => {
   const SESSION_TIMEOUT_MS = 180 * 1000;
-  const loginTime = new Date("{{ session.get('login_time') }}").getTime();
-  const elapsed = Date.now() - loginTime;
+
+  const loginTs = Number("{{ session.get('login_ts') }}"); // seconds
+  if (!loginTs) return;
+
+  const elapsed = Date.now() - (loginTs * 1000);
   const remaining = SESSION_TIMEOUT_MS - elapsed;
 
   if (remaining <= 0) {
-    window.location.href = "{{ url_for('session_expired') }}";
+    window.location.href = "{{ url_for('login', expired='1') }}";
     return;
   }
 
   setTimeout(() => {
-    window.location.href = "{{ url_for('session_expired') }}";
+    window.location.href = "{{ url_for('login', expired='1') }}";
   }, remaining);
 })();
 </script>

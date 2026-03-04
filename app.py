@@ -74,19 +74,13 @@ def require_login():
     return user
 
 def is_session_expired() -> bool:
-    login_time_str = session.get("login_time")
+    login_ts = session.get("login_ts")
 
-    if not login_time_str:
+    if not isinstance(login_ts, int):
         return True
 
-    try:
-        login_time = datetime.fromisoformat(login_time_str)
-    except ValueError:
-        return True
-
-    now = datetime.now(timezone.utc)
-    elapsed = (now - login_time).total_seconds()
-
+    now_ts = int(datetime.now(timezone.utc).timestamp())
+    elapsed = now_ts - login_ts
     return elapsed > SESSION_TIMEOUT
 
 @app.get("/session-expired")
@@ -377,7 +371,7 @@ def login():
     state["attempts"] = 0
     state["locked_until"] = None
     session["user_email"] = email
-    session["login_time"] = datetime.now(timezone.utc).isoformat()
+    session["login_ts"] = int(datetime.now(timezone.utc).timestamp())  
     return redirect(url_for("dashboard"))
 
 @app.get("/logout")
