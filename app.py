@@ -325,7 +325,7 @@ def login():
 
     # Control de bloqueo
     state = failed_logins.setdefault(email, {"attempts": 0, "locked_until": None})
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     if state["locked_until"] and now < state["locked_until"]:
         mins = int((state["locked_until"] - now).total_seconds() // 60) + 1
@@ -559,7 +559,7 @@ def checkout(event_id: int):
         "service_fee": service_fee,
         "total": total,
         "status": "PAID",
-        "created_at": datetime.utcnow().isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
         "payment": form_data
     })
 
