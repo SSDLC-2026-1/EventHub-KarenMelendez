@@ -287,10 +287,12 @@ def buy_ticket(event_id: int):
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-
     if request.method == "GET":
-        msg = "Account created successfully. Please sign in." \
-            if request.args.get("registered") == "1" else None
+        msg = None
+        if request.args.get("registered") == "1":
+            msg = "Account created successfully. Please sign in."
+        if request.args.get("expired") == "1":
+            msg = "Session expired. Please sign in again."
         return render_template("login.html", info_message=msg)
 
     email = request.form.get("email", "").strip().lower()
@@ -571,9 +573,7 @@ def checkout(event_id: int):
 
 @app.route("/profile", methods=["GET", "POST"])
 def profile():
- 
-
-    user = get_current_user()
+    user = require_login()
     if not user:
         session.clear()
         return redirect(url_for("login"))
