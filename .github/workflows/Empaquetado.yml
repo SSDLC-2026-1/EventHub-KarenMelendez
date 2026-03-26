@@ -38,10 +38,10 @@ jobs:
 
       - name: Compress package
         run: |
-          tar -czf package.tar.gz package
+          zip -r archivo.zip package/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: packaged-module
-          path: package.tar.gz
+          path: archivo.zip
