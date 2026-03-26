@@ -2,10 +2,10 @@ name: Conditional execution by branch
 
 on:
   push:
+
 jobs:
 validar_rama:
-  runs_on:ubuntu-latest
-  
+  runs-on:ubuntu-latest
   steps:
     - name:Paso general
       run: echo "Este paso corre en cualquier push"
