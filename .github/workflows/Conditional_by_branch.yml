@@ -4,26 +4,26 @@ on:
   push:
 
 jobs:
-validar_rama:
-  runs-on:ubuntu-latest
-  steps:
-    - name:Paso general
-      run: echo "Este paso corre en cualquier push"
+  validar_rama:
+    runs-on:ubuntu-latest
+    steps:
+      - name:Paso general
+        run: echo "Este paso corre en cualquier push"
 
-    - name: Detectar rama principal
-      if: github.ref=='refs/heads/main'
-      run: echo "Este paso solo corre en main"
+      - name: Detectar rama principal
+        if: github.ref=='refs/heads/main'
+        run: echo "Este paso solo corre en main"
 
-    - name: Confirmar Ejecucion
-      run: echo "Workflow ejecutado correctamente"
+      - name: Confirmar Ejecucion
+        run: echo "Workflow ejecutado correctamente"
 
-    - name: Mensaje final
-      run: echo "Fin del Workflow"
+      - name: Mensaje final
+        run: echo "Fin del Workflow"
 
-    - name: Mostrar referencia
-      run: echo "Rama detectada: ${{github.ref}}"
+      - name: Mostrar referencia
+        run: echo "Rama detectada: ${{github.ref}}"
 
-    - name: Paso exclusivo de main
-      if: github.ref=="refs/heads/main"
-      run:echo "Despliegue habilitado solo para main"
+      - name: Paso exclusivo de main
+        if: github.ref=="refs/heads/main"
+        run:echo "Despliegue habilitado solo para main"
 
