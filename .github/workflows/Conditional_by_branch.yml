@@ -24,7 +24,7 @@ jobs:
         run: echo "Rama detectada: ${{ github.ref }}"
 
       - name: Paso exclusivo de main
-        if: github.ref=="refs/heads/main"
+        if: github.ref == "refs/heads/main"
         run: echo "Despliegue habilitado solo para main"
 
 
