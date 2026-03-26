@@ -27,9 +27,9 @@ jobs:
           mkdir package
 
           if [ "${{ github.event.inputs.module }}" == "frontend" ]; then
-            cp -r frontend/* package/ || true
+            cp -r templates/* package/ || true
           elif [ "${{ github.event.inputs.module }}" == "backend" ]; then
-            cp -r backend/* package/ || true
+            cp -r *.py package/ || true
           elif [ "${{ github.event.inputs.module }}" == "data" ]; then
             cp -r data/* package/ || true
           else
