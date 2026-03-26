@@ -1,0 +1,47 @@
+name: Empaquetado por módulos
+
+on:
+  workflow_dispatch:
+    inputs:
+      module:
+        description: "Select module to package"
+        required: true
+        default: "full"
+        type: choice
+        options:
+          - frontend
+          - backend
+          - data
+          - full
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Create package
+        run: |
+          mkdir package
+
+          if [ "${{ github.event.inputs.module }}" == "frontend" ]; then
+            cp -r frontend/* package/ || true
+          elif [ "${{ github.event.inputs.module }}" == "backend" ]; then
+            cp -r backend/* package/ || true
+          elif [ "${{ github.event.inputs.module }}" == "data" ]; then
+            cp -r data/* package/ || true
+          else
+            cp -r * package/
+          fi
+
+      - name: Compress package
+        run: |
+          tar -czf package.tar.gz package
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: packaged-module
+          path: package.tar.gz
