@@ -21,7 +21,7 @@ jobs:
         run: echo "Fin del Workflow"
 
       - name: Mostrar referencia
-        run: echo "Rama detectada: ${{github.ref}}"
+        run: echo "Rama detectada: ${{ github.ref }}"
 
       - name: Paso exclusivo de main
         if: github.ref=="refs/heads/main"
