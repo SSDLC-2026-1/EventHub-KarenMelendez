@@ -21,7 +21,7 @@ jobs:
         run: echo "Fin del Workflow"
 
       - name: Paso exclusivo de main
-        if: github.ref == "refs/heads/main"
+        if: github.ref == 'refs/heads/main'
         run: echo "Despliegue habilitado solo para main"
 
 
