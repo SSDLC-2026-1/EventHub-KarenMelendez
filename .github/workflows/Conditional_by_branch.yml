@@ -5,7 +5,7 @@ on:
 
 jobs:
   validar_rama:
-    runs-on:ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - name:Paso general
         run: echo "Este paso corre en cualquier push"
