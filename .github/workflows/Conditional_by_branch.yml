@@ -11,7 +11,7 @@ jobs:
         run: echo "Este paso corre en cualquier push"
 
       - name: Detectar rama principal
-        if: github.ref=='refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         run: echo "Este paso solo corre en main"
 
       - name: Confirmar Ejecucion
