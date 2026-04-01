@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% set title = "EventHub - Discover Events" %}
+
+{% block content %}
+<section class="hero">
+  <div class="container hero-inner">
+    <h1>Discover Events Near You</h1>
+    <p class="muted">Find unforgettable experiences, concerts, conferences, and more in your city.</p>
+
+    <form class="hero-search" action="{{ url_for('index') }}" method="get">
+      <input name="q" value="{{ q }}" placeholder="Event name or keyword" />
+      <select name="city">
+        {% for c in cities %}
+          <option value="{{ c }}" {% if c == city %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+      <input type="date" name="date" value="{{ date_str }}" />
+      <button class="btn btn-primary" type="submit">Search</button>
+    </form>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h2 class="section-title">Featured Events</h2>
+    <div class="grid cards-3">
+      {% for e in featured %}
+        <article class="card">
+          <img class="card-img" src="{{ e.banner_url }}" alt="Event banner">
+          <div class="card-body">
+            <h3 class="card-title">{{ e.title }}</h3>
+            <div class="card-meta">
+              <div>{{ e.start.strftime("%b %d, %Y • %I:%M %p") }}</div>
+              <div>{{ e.venue }}, {{ e.city }}</div>
+            </div>
+            <div class="card-row">
+              <span class="price">${{ "%.2f"|format(e.price_usd) }}</span>
+              <a class="btn btn-ghost" href="{{ url_for('event_detail', event_id=e.id) }}">View Details</a>
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h2 class="section-title">Browse by Category</h2>
+    <div class="category-row">
+      {% for cat in categories if cat != "All" %}
+        <a class="chip" href="{{ url_for('index', category=cat) }}">{{ cat }}</a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="row-between">
+      <h2 class="section-title">Upcoming Events</h2>
+      <div class="chips">
+        <a class="chip {% if category=='All' %}chip-active{% endif %}" href="{{ url_for('index', category='All') }}">All</a>
+        {% for cat in categories if cat != "All" %}
+          <a class="chip {% if category==cat %}chip-active{% endif %}" href="{{ url_for('index', category=cat) }}">{{ cat }}</a>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="grid cards-3">
+      {% for e in upcoming %}
+        <article class="card">
+          <img class="card-img" src="{{ e.banner_url }}" alt="Event banner">
+          <div class="card-body">
+            <h3 class="card-title">{{ e.title }}</h3>
+            <div class="card-meta">
+              <div>{{ e.start.strftime("%b %d, %Y • %I:%M %p") }}</div>
+              <div>{{ e.venue }}, {{ e.city }}</div>
+            </div>
+            <div class="card-row">
+              <span class="price">${{ "%.2f"|format(e.price_usd) }}</span>
+              <a class="btn btn-ghost" href="{{ url_for('event_detail', event_id=e.id) }}">View Details</a>
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

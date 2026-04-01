@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% set title = "Sign In - EventHub" %}
+
+{% block header %}{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="auth-logo">EH</div>
+      <div class="auth-appname">EventHub</div>
+    </div>
+
+    <div class="auth-subtitle">
+      <span class="auth-lock">🔒</span>
+      <span>Secure access to your tickets</span>
+    </div>
+
+    {% if error %}
+    <div class="auth-banner auth-banner-error">
+        <strong>{{ error }}</strong> Please check your email and password.
+    </div>
+    {% endif %}
+
+    {% if info_message %}
+    <div class="auth-banner auth-banner-ok">{{ info_message }}</div>
+    {% endif %}
+
+    <form class="auth-form" method="post" action="{{ url_for('login') }}">
+        <label class="auth-label" for="email">Email address</label>
+        <div class="auth-input">
+        <span class="auth-icon">✉️</span>
+        <input id="email" name="email" type="email"
+                value="{{ (form.email if form else '') }}"
+                placeholder="you@example.com" />
+        </div>
+        {% if field_errors and field_errors.get('email') %}
+        <div class="auth-help auth-help-error">{{ field_errors.get('email') }}</div>
+        {% endif %}
+
+        <label class="auth-label" for="password">Password</label>
+        <div class="auth-input">
+        <span class="auth-icon">🔒</span>
+        <input id="password" name="password" type="password" placeholder="••••••••" />
+        <span class="auth-eye">👁️</span>
+        </div>
+
+        {% if field_errors and field_errors.get('password') %}
+        <div class="auth-help auth-help-error">{{ field_errors.get('password') }}</div>
+        {% endif %}
+
+      <div class="auth-row">
+        <a class="auth-link" href="#">Forgot password?</a>
+      </div>
+
+      <button class="btn btn-primary btn-full" type="submit">Sign In</button>
+
+      <div class="auth-bottom">
+        <div class="muted">
+          Don’t have an account?
+          <a class="auth-link" href="{{ url_for('register') }}">Create one</a>
+        </div>
+
+        <div class="auth-legal muted small">
+          By signing in you agree to EventHub’s <a class="auth-link" href="#">Terms</a> &amp; <a class="auth-link" href="#">Privacy</a><br/>
+          🔐 We never store your password in plain text.
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

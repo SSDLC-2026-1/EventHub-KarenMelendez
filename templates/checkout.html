@@ -1,0 +1,137 @@
+
+{% extends "base.html" %}
+{% set title = "Checkout - EventHub" %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="checkout-wrap">
+      <!-- Left: Order Summary -->
+      <div class="checkout-card">
+        <h2 class="checkout-title">Order Summary</h2>
+
+        <div class="checkout-event">
+          <div class="checkout-event-name">{{ event.title }}</div>
+          <div class="muted small">🗓 {{ event.start.strftime("%b %d, %Y • %I:%M %p") }}</div>
+          <div class="muted small">📍 {{ event.venue }}, {{ event.city }}</div>
+        </div>
+
+        <div class="checkout-line muted small">Quantity: <strong>{{ qty }}</strong></div>
+
+        <div class="checkout-pricing">
+          <div class="checkout-row">
+            <span class="muted">Ticket Price (x{{ qty }})</span>
+            <span>${{ "%.2f"|format(subtotal) }}</span>
+          </div>
+          <div class="checkout-row">
+            <span class="muted">Service Fees</span>
+            <span>${{ "%.2f"|format(service_fee) }}</span>
+          </div>
+          <div class="checkout-row checkout-total">
+            <span>Total:</span>
+            <span class="checkout-total-amt">${{ "%.2f"|format(total) }}</span>
+          </div>
+        </div>
+
+        <a class="checkout-cancel" href="{{ url_for('event_detail', event_id=event.id) }}">Cancel Payment</a>
+      </div>
+
+      <!-- Right: Payment Details -->
+      <div class="checkout-card">
+        <h2 class="checkout-title">Payment Details</h2>
+
+        <form method="post" action="{{ url_for('checkout', event_id=event.id, qty=qty) }}">
+
+        <label class="auth-label" for="card_number">Card Number</label>
+        <div class="auth-input">
+            <span class="auth-icon">💳</span>
+            <input id="card_number"
+              name="card_number"
+              type="password"
+              inputmode="numeric"
+              autocomplete="cc-number"
+              placeholder="•••• •••• •••• ••••">
+            <span id="card_last4_overlay" class="card-last4-overlay"></span>
+          </div>
+        {% if errors.get("card_number") %}
+            <div class="auth-help auth-help-error">{{ errors["card_number"] }}</div>
+        {% endif %}
+        {% if form_data.get("card_last4") %}
+            <div class="auth-help muted small">Last4 detected: •••• {{ form_data["card_last4"] }}</div>
+        {% endif %}
+
+        <div class="checkout-grid2">
+            <div>
+            <label class="auth-label" for="exp_date">Expiration Date</label>
+            <div class="auth-input">
+                <span class="auth-icon">📅</span>
+                <input id="exp_date" name="exp_date" type="text" placeholder="MM/YY"
+                    value="{{ form_data.get('exp_date','') }}">
+            </div>
+            {% if errors.get("exp_date") %}
+                <div class="auth-help auth-help-error">{{ errors["exp_date"] }}</div>
+            {% endif %}
+            </div>
+
+            <div>
+            <label class="auth-label" for="cvv">CVV</label>
+            <div class="auth-input">
+                <span class="auth-icon">🔒</span>
+                <input id="cvv"
+                  name="cvv"
+                  type="password"
+                  inputmode="numeric"
+                  autocomplete="cc-csc"
+                  placeholder="•••">
+            </div>
+            {% if errors.get("cvv") %}
+                <div class="auth-help auth-help-error">{{ errors["cvv"] }}</div>
+            {% endif %}
+            </div>
+        </div>
+
+        <label class="auth-label" for="name_on_card">Name on Card</label>
+        <div class="auth-input">
+            <span class="auth-icon">👤</span>
+            <input id="name_on_card" name="name_on_card" type="text" placeholder="John Doe"
+                value="{{ form_data.get('name_on_card','') }}">
+        </div>
+        {% if errors.get("name_on_card") %}
+            <div class="auth-help auth-help-error">{{ errors["name_on_card"] }}</div>
+        {% endif %}
+
+        <label class="auth-label" for="billing_email">Billing Email</label>
+        <div class="auth-input">
+            <span class="auth-icon">✉️</span>
+            <input id="billing_email" name="billing_email" type="email" placeholder="john.doe@example.com"
+                value="{{ form_data.get('billing_email','') }}">
+        </div>
+        {% if errors.get("billing_email") %}
+            <div class="auth-help auth-help-error">{{ errors["billing_email"] }}</div>
+        {% endif %}
+
+        <button class="btn btn-primary btn-full" type="submit" style="margin-top: 14px;">
+            Pay Now
+        </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+<script>
+(() => {
+  const input = document.getElementById("card_number");
+  const overlay = document.getElementById("card_last4_overlay");
+
+  function update() {
+    const digits = (input.value || "").replace(/\D/g, "");
+    const last4 = digits.length >= 4 ? digits.slice(-4) : "";
+    overlay.textContent = last4;
+  }
+
+  input.addEventListener("input", update);
+  input.addEventListener("focus", update);
+  update();
+})();
+</script>
+{% endblock %}

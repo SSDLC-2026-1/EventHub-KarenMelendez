@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% set title = "Dashboard - EventHub" %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1>Welcome back, {{ user_name }}</h1>
+    <p class="muted">This is a simple dashboard placeholder.</p>
+  </div>
+  {% if paid %}
+  <div class="auth-banner auth-banner-ok">Payment completed (demo). Order stored in orders.json.</div>
+    {% endif %}
+</section>
+{% endblock %}

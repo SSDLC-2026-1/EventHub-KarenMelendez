@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% set title = "Admin - User Management" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='admin_users.css') }}">
+
+<section class="section">
+  <div class="container admin-wrap">
+
+    <div class="admin-head">
+      <div>
+        <h1 class="admin-title">User Management</h1>
+        <div class="muted small">Manage, filter, and audit platform user accounts.</div>
+      </div>
+
+
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-card">
+      <form class="filters" method="get" action="{{ url_for('admin_users') }}">
+        <div class="filter-block">
+          <div class="filter-label">Search Users</div>
+          <div class="filter-input">
+            <input name="q" value="{{ filters.q }}" placeholder="Search by name or email..." />
+          </div>
+        </div>
+
+        <div class="filter-block">
+          <div class="filter-label">Role</div>
+          <select name="role" class="filter-select">
+            <option value="all" {% if filters.role == "all" %}selected{% endif %}>All Roles</option>
+            <option value="user" {% if filters.role == "user" %}selected{% endif %}>User</option>
+            <option value="admin" {% if filters.role == "admin" %}selected{% endif %}>Admin</option>
+          </select>
+        </div>
+
+        <div class="filter-block">
+          <div class="filter-label">Status</div>
+          <select name="status" class="filter-select">
+            <option value="all" {% if filters.status == "all" %}selected{% endif %}>All Status</option>
+            <option value="active" {% if filters.status == "active" %}selected{% endif %}>Active</option>
+            <option value="disabled" {% if filters.status == "disabled" %}selected{% endif %}>Disabled</option>
+          </select>
+        </div>
+
+        <div class="filter-block">
+          <div class="filter-label">Lockout</div>
+          <select name="lockout" class="filter-select">
+            <option value="all" {% if filters.lockout == "all" %}selected{% endif %}>All Types</option>
+            <option value="locked" {% if filters.lockout == "locked" %}selected{% endif %}>Locked</option>
+            <option value="not_locked" {% if filters.lockout == "not_locked" %}selected{% endif %}>Not locked</option>
+          </select>
+        </div>
+
+        <div class="filter-actions">
+          <button class="btn btn-ghost" type="submit">Filter</button>
+        </div>
+      </form>
+    </div>
+
+   
+    <!-- Users table -->
+    <div class="table-card">
+      <div class="table-head">
+        <div class="muted small">Showing 1 to {{ total }} of {{ total }} results</div>
+      </div>
+
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Lockout Status</th>
+            <th class="right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td>
+              <div class="user-cell">
+                <div class="avatar">{{ (u.full_name or "U")[:1]|upper }}</div>
+                <div>
+                  <div class="user-name">{{ u.full_name }}</div>
+                  <div class="muted tiny">ID: {{ u.id }}</div>
+                </div>
+              </div>
+            </td>
+
+            <td class="muted">{{ u.email }}</td>
+
+            <td>
+              <form method="post" action="{{ url_for('admin_change_role', user_id=u.id) }}">
+                <select name="role" class="role-select" onchange="this.form.submit()">
+                  <option value="user" {% if u.role|lower == "user" %}selected{% endif %}>User</option>
+                  <option value="admin" {% if u.role|lower == "admin" %}selected{% endif %}>Admin</option>
+                </select>
+              </form>
+            </td>
+
+            <td>
+              {% if u.status|lower == "active" %}
+                <span class="badge badge-green">Active</span>
+              {% else %}
+                <span class="badge badge-red">Disabled</span>
+              {% endif %}
+            </td>
+
+            <td class="muted">
+              {% if u.locked_until %}
+                <span class="badge badge-gray">Locked</span>
+                <div class="tiny muted">Until {{ u.locked_until }}</div>
+              {% else %}
+                —
+              {% endif %}
+            </td>
+
+            <td class="right">
+              <form method="post" action="{{ url_for('admin_toggle_user', user_id=u.id) }}" style="display:inline;">
+                {% if u.status|lower == "active" %}
+                  <button class="btn btn-danger-outline" type="submit">Disable</button>
+                {% else %}
+                  <button class="btn btn-ghost" type="submit">Enable</button>
+                {% endif %}
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}
